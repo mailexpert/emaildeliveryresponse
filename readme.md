@@ -22,6 +22,7 @@ This platform enables **developers, ESPs, marketers, and sysadmins** to contribu
   - Source verification
   - Last seen date
 - Access deliverability status of any email (by hash) through a web UI or API
+- Web UI Interface: https://emaildelivery.space/
 
 ## 📦 Features
 
