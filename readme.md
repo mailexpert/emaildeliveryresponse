@@ -1,4 +1,4 @@
-# 📬 Email Hash Deliverability Network
+# 📬 Email Deliverability Network
 
 **Crowd-powered, privacy-preserving intelligence for email deliverability.**
 
