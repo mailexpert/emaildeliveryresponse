@@ -103,9 +103,10 @@ POST /submit
 
 ## 📜 License
 
-MIT License – use freely, improve openly.
+MIT License – use freely, improve openly..
 
 ## 🙌 Acknowledgments
 
 This project is inspired by the idea that **open email infrastructure = better email ecosystems**. Special thanks to everyone helping make the email world more transparent and secure.
+
 
