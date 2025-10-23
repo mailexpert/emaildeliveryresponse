@@ -56,9 +56,9 @@ python email_hash_web_ui.py
 
 For testing sample data, use the following email addresses:
 #### Successful Delivery examples
-successful1@gmail.com
-successful2@gmail.com
-successful3@gmail.com
+successful1@gmail.com 
+successful2@gmail.com 
+successful3@gmail.com 
 
 #### Soft Bounce examples
 domainnotfound1@gmail.come
