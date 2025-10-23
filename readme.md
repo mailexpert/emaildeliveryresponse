@@ -51,8 +51,32 @@ python email_hash_web_ui.py
 ```
 
 ### 🌐 Access:
-- Web UI: http://localhost:8000
+- Web UI: http://emaildelivery.space
 - API: `/check/{email_hash}`, `/submit`, `/batch`
+
+For testing sample data, use the following email addresses:
+#### Successful Delivery examples
+successful1@gmail.com
+successful2@gmail.com
+successful3@gmail.com
+
+#### Soft Bounce examples
+domainnotfound1@gmail.come
+domainnotfound2@gmail.come
+inboxfull1@gmail.com
+inboxfull2@gmail.com
+unabletofindmxofdomain1@gmail.comm
+unabletofindmxofdomain2@gmail.comm
+accountinactive1@gmail.com
+accountinactive2@gmail.com
+
+#### Hard Bounce examples
+accountnotexists1@gmail.com
+accountnotexists2@gmail.com
+mailboxunavailable1@mail.com
+mailboxunavailable2@mail.com
+mailboxdisabled1@rocketmail.com
+mailboxdisabled2@rocketmail.com
 
 ## 🤝 Contributing
 
