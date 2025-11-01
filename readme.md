@@ -103,6 +103,59 @@ POST /submit
 }
 ```
 
+## Data Privacy & PII Handling
+
+This project processes email-related activity data for the purpose of recipient-level deliverability scoring.  
+To support accurate cross-campaign and cross-source attribution, the API accepts **raw email addresses** as input.
+
+However, we follow a **zero-retention PII policy**:
+
+- **Raw email addresses are never stored** in any database.
+- Raw values are **never written to logs**, debug output, or telemetry.
+- The raw input is used **only in-memory** for:
+  - Email format validation
+  - Domain normalization (e.g., IDNA / unicode-safe handling)
+  - Converting the address into a **normalized, one-way SHA-256 hash**
+
+Once the hash is generated, the raw email value is **immediately discarded** and does **not persist** past the ingestion step.
+
+Only the hashed identifier is stored for event attribution and behavioral analysis.
+
+This design ensures:
+
+- Accurate recipient history and scoring
+- Cross-source deduplication
+- Strong privacy protection
+- **No storage of Personally Identifiable Information (PII)**
+
+> **In short:** The system processes raw email only long enough to turn it into a hash — and does not store, retain, or log the raw address at any point.
+
+### Example Data Flow
+
+Client sends raw email
+↓
+Validate & normalize
+↓
+Convert to SHA-256 hash
+↓
+Store only the hash
+↓
+Discard raw email entirely
+
+
+### Why Hashing Is Used
+
+The hashed email address acts as a stable, anonymous identifier that:
+- Cannot be reverse-engineered to reveal the original email address
+- Enables behavioral modeling while respecting privacy
+- Supports deduplication across data sources
+
+### Privacy Statement
+
+We are committed to protecting user privacy.  
+All processing is performed under the principle of **minimum necessary retention** — raw PII is never stored.
+
+
 📬 *You can also batch submit via CSV or contribute via pull request.*
 
 ## 📜 License
