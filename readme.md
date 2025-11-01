@@ -95,9 +95,9 @@ POST /submit
   "hard_bounce_date": null,
   "hard_bounce_reason": null,
   "soft_bounce_date": "2025-11-01 02:34:48",
-  "soft_bounce_reason": "Mailbox does not exist",
-  "smtp_code": "550",
-  "smtp_message": "Mailbox not found",
+  "soft_bounce_reason": "452-4.2.2 The recipient's inbox is out of storage space. Please direct the recipient to https://support.google.com/mail/?p=OverQuotaTemp ffacd0b85a97d-3a5324505d0si2488786f8f.315 - gsmtp"
+  "smtp_code": "452",
+  "smtp_message": "452-4.2.2 The recipient's inbox is out of storage space.",
   "delivered_date": null,
   "status": "failed"
 }
