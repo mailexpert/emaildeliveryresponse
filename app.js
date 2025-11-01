@@ -20,7 +20,7 @@ async function hashEmail(email) {
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-domain='https://dack.iworkblog.com/me/check/'
+domain='https://emaildelivery.space/me/check/'
 
 async function checkHashedEmail(hashedEmail, rawEmail = '') {
   try {
