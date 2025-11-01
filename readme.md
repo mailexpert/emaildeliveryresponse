@@ -90,12 +90,16 @@ We welcome data contributions from:
 ```json
 POST /submit
 {
-  "email_hash": "9a5e...",
-  "status": "undeliverable",
+  "email": "fromname@test.com",
+  "send_date": "2025-11-01 02:34:22",
+  "hard_bounce_date": null,
+  "hard_bounce_reason": null,
+  "soft_bounce_date": "2025-11-01 02:34:48",
+  "soft_bounce_reason": "Mailbox does not exist",
   "smtp_code": "550",
   "smtp_message": "Mailbox not found",
-  "last_seen": "2025-06-08",
-  "source_verified": true
+  "delivered_date": null,
+  "status": "failed"
 }
 ```
 
