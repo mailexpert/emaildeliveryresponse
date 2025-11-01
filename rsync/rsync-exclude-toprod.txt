@@ -1,0 +1,5 @@
+.git
+.gitignore
+rsync
+getDBBackup.sh
+lib/dack_config.txt

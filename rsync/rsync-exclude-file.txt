@@ -1,0 +1,6 @@
+\.wsgi*
+uploads/
+cropselect/
+test*
+www.myheartprinted.com
+work/
