@@ -44,15 +44,15 @@ This is a **community-driven effort**, not a commercial validator.
 
 ### 🖥️ Run Locally
 ```bash
-git clone https://github.com/your-org/email-hash-network.git
-cd email-hash-network
+git clone https://github.com/mailexpert/emaildeliveryresponse
+cd emaildeliveryresponse
 pip install -r requirements.txt
 python email_hash_web_ui.py
 ```
 
 ### 🌐 Access:
 - Web UI: http://emaildelivery.space
-- API: `/check/{email_hash}`, `/submit`, `/batch`
+- API: `/me/checkemail/{email_address}`, `/submit`, `/batch`
 
 For testing sample data, use the following email addresses:
 #### Successful Delivery examples
