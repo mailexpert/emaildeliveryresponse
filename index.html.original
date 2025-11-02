@@ -402,7 +402,7 @@
                      method: 'GET',
                      headers: {
                             'Content-Type': 'application/json',
-                            'Authorization': 'Bearer AUTH-7yc3-jxuk-0gv7-g20c'
+                            'Authorization': 'Bearer 5hm1r32tgc8wggc8o4wow4gkwgwowwowo4sk4wkcc'
                     }
                 });
 
@@ -419,14 +419,7 @@
                     data: data
                 }));
             } catch (error) {
-                let errorMessage = 'Failed to check email: ' + error.message;
-    
-                // Check if it's a rate limit error
-                if (error.message.includes('402') || error.message.includes('Rate limit')) {
-                    errorMessage = 'Rate limit exceeded. Please contact support at support@emaildelivery.space to get an API key.';
-                }
-                
-                showError(errorMessage);
+                showError('Failed to check email: ' + error.message);
             } finally {
                 hideLoading();
                 enableButton();
@@ -557,7 +550,7 @@
         }
 
         function viewHistory(email) {
-            window.location.href = `history2.html?email=${encodeURIComponent(email)}`;
+            window.location.href = `history.html?email=${encodeURIComponent(email)}`;
         }
 
         function escapeHtml(text) {

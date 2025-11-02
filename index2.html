@@ -398,7 +398,7 @@
 
             try {
                 const emailHash = await hashEmail(email);
-                const response = await fetch(`https://emaildelivery.space/me/check/${emailHash}`, {
+                const response = await fetch(`https://emaildelivery.space/met/check/${emailHash}`, {
                      method: 'GET',
                      headers: {
                             'Content-Type': 'application/json',
