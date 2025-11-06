@@ -144,6 +144,21 @@
             color: #667eea;
         }
 
+        .resume-info {
+            background: #fff3cd;
+            color: #856404;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid #ffc107;
+            font-size: 14px;
+        }
+
+        .resume-info strong {
+            display: block;
+            margin-bottom: 5px;
+        }
+
         .btn-primary {
             padding: 18px 40px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -200,6 +215,24 @@
 
         .btn-stop:hover {
             background: #c82333;
+            transform: translateY(-2px);
+        }
+
+        .btn-clear {
+            padding: 18px 40px;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-left: 12px;
+        }
+
+        .btn-clear:hover {
+            background: #5a6268;
             transform: translateY(-2px);
         }
 
@@ -515,6 +548,11 @@
         <!-- Bulk Email Tab -->
         <div id="bulkTab" class="tab-content">
             <div class="search-box" style="max-width: 1000px;">
+                <div id="resumeInfo" class="resume-info" style="display: none;">
+                    <strong>⚠️ Previous session detected</strong>
+                    <span id="resumeText"></span>
+                </div>
+                
                 <textarea 
                     id="bulkEmailInput" 
                     placeholder="Enter email addresses (one per line, max 1000)&#10;&#10;Example:&#10;user1@example.com&#10;user2@gmail.com&#10;user3@domain.com"
@@ -524,12 +562,15 @@
                     <span class="email-count" id="emailCount">0 emails</span>
                     <span>Maximum 1000 emails</span>
                 </div>
-                <div style="margin-top: 20px; display: flex; gap: 12px;">
+                <div style="margin-top: 20px; display: flex; gap: 12px; flex-wrap: wrap;">
                     <button class="btn-primary" id="bulkCheckBtn" onclick="checkBulkEmails()">
                         Check All Emails
                     </button>
                     <button class="btn-stop" id="stopBtn" onclick="stopBulkCheck()" style="display: none;">
                         Stop Processing
+                    </button>
+                    <button class="btn-clear" id="clearBtn" onclick="clearSession()" style="display: none;">
+                        Clear & Start Fresh
                     </button>
                 </div>
             </div>
@@ -572,6 +613,86 @@
         const API_KEY = 'Bearer AUTH-tjup-zioa-2hui-otc1';
         let bulkResults = [];
         let shouldStop = false;
+        let shouldStopApi = false;
+        let apiError = "";
+        let processState = null;
+
+        // Load saved state on page load
+        window.addEventListener('load', () => {
+            loadProcessState();
+        });
+
+        function saveProcessState(state) {
+            localStorage.setItem('bulkCheckState', JSON.stringify(state));
+            processState = state;
+        }
+
+        function loadProcessState() {
+            const saved = localStorage.getItem('bulkCheckState');
+            if (saved) {
+                processState = JSON.parse(saved);
+                showResumeInfo();
+            }
+        }
+
+        function clearSession() {
+            if (confirm('Are you sure you want to clear the saved session and start fresh?')) {
+                localStorage.removeItem('bulkCheckState');
+                processState = null;
+                bulkResults = [];
+                hideResumeInfo();
+                hideResults('bulkResultsContainer');
+                hideAlert('bulkErrorAlert');
+                hideAlert('bulkSuccessAlert');
+                document.getElementById('bulkEmailInput').value = '';
+                updateEmailCount();
+            }
+        }
+
+        function showResumeInfo() {
+            if (!processState) return;
+            
+            const resumeInfo = document.getElementById('resumeInfo');
+            const resumeText = document.getElementById('resumeText');
+            const remaining = processState.allEmails.length - processState.currentIndex;
+            
+            resumeText.textContent = `You have ${remaining} emails remaining from your previous session. Click "Check All Emails" to resume.`;
+            resumeInfo.style.display = 'block';
+            document.getElementById('clearBtn').style.display = 'inline-block';
+            
+            // Restore the email list
+            if (processState.allEmails && processState.allEmails.length > 0) {
+                document.getElementById('bulkEmailInput').value = processState.allEmails.join('\n');
+                updateEmailCount();
+            }
+            
+            // Restore previous results
+            if (processState.results && processState.results.length > 0) {
+                bulkResults = processState.results;
+                const stats = calculateStats(bulkResults);
+                displayBulkResults(stats.successful, stats.hardBounces, stats.softBounces, stats.unknowns, stats.sents);
+            }
+        }
+
+        function hideResumeInfo() {
+            document.getElementById('resumeInfo').style.display = 'none';
+            document.getElementById('clearBtn').style.display = 'none';
+        }
+
+        function calculateStats(results) {
+            let successful = 0, hardBounces = 0, softBounces = 0, unknowns = 0, sents = 0;
+            
+            results.forEach(r => {
+                const status = r.status.toLowerCase();
+                if (status === 'delivered') successful++;
+                else if (status === 'sent') sents++;
+                else if (status === 'hard_bounce') hardBounces++;
+                else if (status === 'soft_bounce') softBounces++;
+                else if (status === 'unknown') unknowns++;
+            });
+            
+            return { successful, hardBounces, softBounces, unknowns, sents };
+        }
 
         function switchTab(tab) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -648,7 +769,6 @@
                 `;
             } else {
                 records.forEach(record => {
-                    // Determine status based on algorithm
                     let displayStatus = 'unknown';
                     const apiStatus = (record.status || 'unknown').toLowerCase();
                     
@@ -657,7 +777,6 @@
                     } else if (apiStatus === 'sent') {
                         displayStatus = 'sent';
                     } else if (apiStatus === 'failed') {
-                        // Check bounce dates when status is "failed"
                         if (record.hard_bounce_date && record.hard_bounce_date !== 'None' && record.hard_bounce_date !== null) {
                             displayStatus = 'hard_bounce';
                         } else if (record.soft_bounce_date && record.soft_bounce_date !== 'None' && record.soft_bounce_date !== null) {
@@ -704,7 +823,35 @@
 
         async function checkBulkEmails() {
             const textarea = document.getElementById('bulkEmailInput');
-            const emails = parseEmails(textarea.value);
+            let emails = parseEmails(textarea.value);
+            let startIndex = 0;
+
+            // Check if resuming from previous state
+            if (processState && processState.allEmails && processState.currentIndex < processState.allEmails.length) {
+                // Verify the email list matches
+                const currentEmails = emails.join(',');
+                const savedEmails = processState.allEmails.join(',');
+                
+                if (currentEmails === savedEmails) {
+                    // Resume from where we left off
+                    startIndex = processState.currentIndex;
+                    bulkResults = processState.results || [];
+                    showSuccess(`Resuming from email ${startIndex + 1} of ${emails.length}`, 'bulkSuccessAlert');
+                    setTimeout(() => hideAlert('bulkSuccessAlert'), 3000);
+                } else {
+                    // Email list changed, ask user
+                    if (!confirm('The email list has changed since your last session. Do you want to start fresh?')) {
+                        return;
+                    }
+                    clearSession();
+                    bulkResults = [];
+                    startIndex = 0;
+                }
+            } else {
+                // Fresh start
+                bulkResults = [];
+                startIndex = 0;
+            }
 
             if (emails.length === 0) {
                 showError('Please enter at least one valid email address', 'bulkErrorAlert');
@@ -717,38 +864,40 @@
             }
 
             hideAlert('bulkErrorAlert');
-            hideAlert('bulkSuccessAlert');
-            hideResults('bulkResultsContainer');
+            hideResumeInfo();
             
-            bulkResults = [];
             shouldStop = false;
             shouldStopApi = false;
             apiError = "";
             
             document.getElementById('bulkCheckBtn').style.display = 'none';
             document.getElementById('stopBtn').style.display = 'inline-block';
+            document.getElementById('clearBtn').style.display = 'none';
             document.getElementById('bulkProgress').style.display = 'block';
             
             const total = emails.length;
-            let completed = 0;
-            let successful = 0;
-            let hardBounces = 0;
-            let softBounces = 0;
-            let unknowns = 0;
-            let sents = 0;
+            let stats = calculateStats(bulkResults);
 
-            for (const email of emails) {
+            for (let i = startIndex; i < emails.length; i++) {
+                const email = emails[i];
+                
                 if (shouldStopApi) {
-	            if (apiError == '402') {
-                        showError('Rate limit. Please retry in 2 minutes.', 'bulkErrorAlert');
-		    }
-		    else {
-                        showError('Api error. Stopped ('+apiError+')', 'bulkErrorAlert');
-		    }
+                    // Already stopped due to rate limit
                     break;
                 }
+                
                 if (shouldStop) {
-                    showError('Processing stopped by user', 'bulkErrorAlert');
+                    // Save state for resume
+                    saveProcessState({
+                        allEmails: emails,
+                        currentIndex: i,
+                        results: bulkResults,
+                        stoppedAt: new Date().toISOString(),
+                        error: 'User stopped'
+                    });
+                    
+                    showError('Processing stopped by user. Click "Check All Emails" to resume.', 'bulkErrorAlert');
+                    showResumeInfo();
                     break;
                 }
 
@@ -770,30 +919,28 @@
                         const data = await response.json();
                         const record = Array.isArray(data) ? data[0] : (data.results?.[0] || data.data?.[0] || data);
                         
-                        // Determine status based on algorithm
                         const apiStatus = (record.status || 'unknown').toLowerCase();
                         
                         if (apiStatus === 'delivered') {
                             status = 'delivered';
-                            successful++;
+                            stats.successful++;
                         } else if (apiStatus === 'sent') {
                             status = 'sent';
-			    sents++;
+                            stats.sents++;
                         } else if (apiStatus === 'failed') {
-                            // Check bounce dates when status is "failed"
                             if (record.hard_bounce_date && record.hard_bounce_date !== 'None' && record.hard_bounce_date !== null) {
                                 status = 'hard_bounce';
-                                hardBounces++;
+                                stats.hardBounces++;
                             } else if (record.soft_bounce_date && record.soft_bounce_date !== 'None' && record.soft_bounce_date !== null) {
                                 status = 'soft_bounce';
-                                softBounces++;
+                                stats.softBounces++;
                             } else {
                                 status = 'unknown';
-			        unknowns++;
+                                stats.unknowns++;
                             }
                         } else {
                             status = 'unknown';
-			    unknowns++;
+                            stats.unknowns++;
                         }
                         
                         smtpCode = record.smtp_code || 'N/A';
@@ -807,22 +954,90 @@
                             send_date: record.send_date || null,
                             checked_at: new Date().toISOString()
                         });
+                        
+                        // Move to next email only on success
+                        const completed = i + 1;
+                        updateProgress(completed, total);
+                        displayBulkResults(stats.successful, stats.hardBounces, stats.softBounces, stats.unknowns, stats.sents);
+                        
+                        // Save state periodically (every 10 emails)
+                        if (completed % 10 === 0) {
+                            saveProcessState({
+                                allEmails: emails,
+                                currentIndex: completed,
+                                results: bulkResults,
+                                lastSaved: new Date().toISOString()
+                            });
+                        }
                     } else {
-                        bulkResults.push({
-                            email,
-                            status: 'error',
-                            smtp_code: 'ERR',
-                            smtp_message: `API Error: ${response.status}`,
-                            send_date: null,
-                            checked_at: new Date().toISOString()
-                        });
-	                shouldStopApi = true;
-			apiError = `${response.status}`;
+                        // Handle API errors
+                        if (response.status === 402) {
+                            // Rate limit - don't add to results, stay on same email
+                            shouldStopApi = true;
+                            
+                            // Try to parse wait duration from response
+                            let waitDuration = null;
+                            try {
+                                const errorText = await response.text();
+                                console.log('402 Response:', errorText); // Debug log
+                                
+                                // Try multiple patterns to extract duration
+                                let match = errorText.match(/Wait duration (\d+) minutes/i);
+                                if (!match) {
+                                    match = errorText.match(/wait (\d+) minutes/i);
+                                }
+                                if (!match) {
+                                    match = errorText.match(/(\d+) minutes/i);
+                                }
+                                
+                                if (match && match[1]) {
+                                    waitDuration = parseInt(match[1]);
+                                }
+                            } catch (e) {
+                                console.error('Error parsing 402 response:', e);
+                            }
+                            
+                            apiError = waitDuration ? `402|${waitDuration}` : '402';
+                            
+                            // Save state to resume from this same email
+                            saveProcessState({
+                                allEmails: emails,
+                                currentIndex: i, // Stay on current email
+                                results: bulkResults,
+                                stoppedAt: new Date().toISOString(),
+                                error: apiError
+                            });
+                            console.log('yes waitDuration:'+waitDuration);
+                            if (waitDuration) {
+                                let timeStr = '';
+                                if (waitDuration > 0) {
+                                    timeStr = `${waitDuration} minute${waitDuration > 1 ? 's' : ''}`;
+                                }
+                                showError(`Rate limit exceeded. Please wait ${timeStr} and click "Check All Emails" to resume.`, 'bulkErrorAlert');
+                            } else {
+                                showError('Rate limit exceeded. Please wait some time and click "Check All Emails" to resume.', 'bulkErrorAlert');
+                            }
+                            showResumeInfo();
+                            break;
+                        } else {
+                            // Other errors - add error result and continue to next email
+                            bulkResults.push({
+                                email,
+                                status: 'error',
+                                smtp_code: 'ERR',
+                                smtp_message: `API Error: ${response.status}`,
+                                send_date: null,
+                                checked_at: new Date().toISOString()
+                            });
+                            
+                            const completed = i + 1;
+                            updateProgress(completed, total);
+                            displayBulkResults(stats.successful, stats.hardBounces, stats.softBounces, stats.unknowns, stats.sents);
+                        }
                     }
 
                 } catch (error) {
-	            shouldStopApi = true;
-	            apiError = error.message;
+                    // Network or other errors - add error result and continue
                     bulkResults.push({
                         email,
                         status: 'error',
@@ -831,21 +1046,27 @@
                         send_date: null,
                         checked_at: new Date().toISOString()
                     });
+                    
+                    const completed = i + 1;
+                    updateProgress(completed, total);
+                    displayBulkResults(stats.successful, stats.hardBounces, stats.softBounces, stats.unknowns, stats.sents);
                 }
 
-                completed++;
-                updateProgress(completed, total);
-                displayBulkResults(successful, hardBounces, softBounces, unknowns, sents);
-                
-                // Small delay between requests
-                await new Promise(resolve => setTimeout(resolve, 100));
+                // Small delay between requests (only if not stopping)
+                if (!shouldStopApi && !shouldStop) {
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
             }
 
             document.getElementById('bulkCheckBtn').style.display = 'inline-block';
             document.getElementById('stopBtn').style.display = 'none';
             
             if (!shouldStop && !shouldStopApi) {
-                showSuccess(`Completed! Checked ${completed} emails.`, 'bulkSuccessAlert');
+                // Completed successfully - clear saved state
+                localStorage.removeItem('bulkCheckState');
+                processState = null;
+                hideResumeInfo();
+                showSuccess(`Completed! Checked ${emails.length} emails.`, 'bulkSuccessAlert');
             }
         }
 
@@ -871,7 +1092,7 @@
                 </div>
                 <div class="stat-box success">
                     <div class="stat-number">${successful}</div>
-                    <div class="stat-label">Deliverable</div>
+                    <div class="stat-label">Delivered</div>
                 </div>
                 <div class="stat-box danger">
                     <div class="stat-number">${hardBounces}</div>
@@ -959,7 +1180,6 @@
                 badgeClass = 'badge-info';
                 displayText = 'Error';
             } else {
-                // Fallback for any other status
                 displayText = status.charAt(0).toUpperCase() + status.slice(1);
             }
             
@@ -1028,5 +1248,9 @@
             document.getElementById(btnId).disabled = false;
         }
     </script>
+<footer style="text-align:center; padding:24px 16px 32px; font-size:14px; color:#fff;">
+    For questions and suggestions, please contact
+    <a href="mailto:support@emaildelivery.space" style="color:#667eea; font-weight:600;">support@emaildelivery.space</a>
+</footer>
 </body>
 </html>
