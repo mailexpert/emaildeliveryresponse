@@ -610,7 +610,7 @@
 
     <script>
         const API_URL = 'https://emaildelivery.space/me/check';
-        const API_KEY = 'Bearer AUTH-tjup-zioa-2hui-otc1';
+        const API_KEY = 'Bearer AUTH-7yc3-jxuk-0gv7-g20c';
         let bulkResults = [];
         let shouldStop = false;
         let shouldStopApi = false;
@@ -982,12 +982,12 @@
                                 console.log('402 Response:', errorText); // Debug log
                                 
                                 // Try multiple patterns to extract duration
-                                let match = errorText.match(/Wait duration (\d+) minutes/i);
+                                let match = errorText.match(/Wait duration (\d+) seconds/i);
                                 if (!match) {
-                                    match = errorText.match(/wait (\d+) minutes/i);
+                                    match = errorText.match(/wait (\d+) seconds/i);
                                 }
                                 if (!match) {
-                                    match = errorText.match(/(\d+) minutes/i);
+                                    match = errorText.match(/(\d+) seconds/i);
                                 }
                                 
                                 if (match && match[1]) {
@@ -1011,7 +1011,7 @@
                             if (waitDuration) {
                                 let timeStr = '';
                                 if (waitDuration > 0) {
-                                    timeStr = `${waitDuration} minute${waitDuration > 1 ? 's' : ''}`;
+                                    timeStr = `${waitDuration} second${waitDuration > 1 ? 's' : ''}`;
                                 }
                                 showError(`Rate limit exceeded. Please wait ${timeStr} and click "Check All Emails" to resume.`, 'bulkErrorAlert');
                             } else {
